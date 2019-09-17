@@ -1,0 +1,71 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Transform" : "AWS::Serverless-2016-10-31",
+	"Description" : "An AWS Serverless Application.",
+
+	"Resources" : {
+			"MySqsQueue":{
+				"Type": "AWS::SQS::Queue"
+
+				},
+		"Post" : {
+			"Type" : "AWS::Serverless::Function",
+			"Properties": {
+				"Handler": "AWSServerlessPOC::AWSServerlessPOC.IncomingRequest::Post",
+				"Runtime": "dotnetcore2.1",
+				"CodeUri": "",
+				"MemorySize": 256,
+				"Timeout": 30,
+				"Role": null,
+				"Policies": [ "AWSLambdaBasicExecutionRole","AmazonSQSFullAccess" ],
+				"Environment":{
+						"Variables":{
+						"MY_SQS_QUEUE_NAME":{"Fn::GetAtt" : [ "MySqsQueue", "QueueName"]}, 
+						"MY_SQS_ACCOUNT_ID":{ "Ref": "AWS::AccountId" },
+						"MY_SQS_QUEUE_URL":{ "Fn::Sub" : "https://sqs.${AWS::Region}.amazonaws.com/" }
+						}},
+				"Events": {
+					"RootGet": {
+						"Type": "Api",
+						"Properties": {
+							"Path": "/IncomingRequest",
+							"Method": "Post"
+						}
+					}
+				}
+				
+			}
+		},
+		"ListenForNewMessages":{
+					"Type" : "AWS::Serverless::Function",
+			"Properties": {
+				"Handler": "AWSServerlessPOC::AWSServerlessPOC.IncomingRequest::ListenForNewMessages",
+				"Runtime": "dotnetcore2.1",
+				"CodeUri": "",
+				"MemorySize": 256,
+				"Timeout": 30,
+				"Role": null,
+				"Policies": [ "AWSLambdaBasicExecutionRole" ],
+				"Events": {
+					"RootGet": {
+						"Type": "SQS",
+						"Properties": {
+							"Queue": {"Fn::GetAtt" : [ "MySqsQueue", "Arn"]}
+						}
+					}
+				}
+				
+			}
+		}
+
+
+
+	},
+	
+	"Outputs" : {
+		"ApiURL" : {
+			"Description" : "API endpoint URL for Prod environment",
+			"Value" : { "Fn::Sub" : "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/" }
+		}
+	}
+}

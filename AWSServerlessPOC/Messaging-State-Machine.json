@@ -1,0 +1,13 @@
+{
+  "Comment": "State Machine",
+  "StartAt": "ListenForNewMessages",
+  "States": {
+    "ListenForNewMessages": {
+      "Type": "Task",
+      "Resource": "${ListenForNewMessages.Arn}",
+      "OutputPath": "$.status",
+      "ResultPath": "$.status",
+      "Next": "WaitToActivate"
+    }
+  }
+}

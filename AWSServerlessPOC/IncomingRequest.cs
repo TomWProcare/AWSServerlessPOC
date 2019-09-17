@@ -59,12 +59,6 @@ namespace AWSServerlessPOC
 
         public POCMessage ListenForNewMessages(SQSEvent sqsEvent, ILambdaContext context)
         {
-            //foreach (var currentMessage in sqsEvent.Records)
-            //{
-            //    var pocMessage = JsonConvert.DeserializeObject<POCMessage>(currentMessage.Body);
-            //    context.Logger.LogLine("Received the following item from sqs queue: " + currentMessage.Body);  
-            //    return pocMessage;
-            //}
             var messageBody = sqsEvent.Records[0].Body;
             var pocMessage = JsonConvert.DeserializeObject<POCMessage>(messageBody);
             context.Logger.LogLine("Received the following item from sqs queue: " + messageBody);

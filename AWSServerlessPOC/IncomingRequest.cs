@@ -16,6 +16,8 @@ namespace AWSServerlessPOC
     public class IncomingRequest
     {
         private readonly IAmazonSQS _amazonSqs;
+        public readonly string AnErrorOccured = "An error occured.";
+        public readonly string ReceivedSuccessfully = "Received Successfully.";
 
         public IncomingRequest() : this(new AmazonSQSClient())
         {
@@ -48,10 +50,10 @@ namespace AWSServerlessPOC
             var sqsRequest = new SendMessageRequest {QueueUrl = queueUrl, MessageBody = request.Body};
             var sqsMessageResponse = await _amazonSqs.SendMessageAsync(sqsRequest);
 
-                var response = new APIGatewayProxyResponse
+            var response = new APIGatewayProxyResponse
             {
-                StatusCode = (int)HttpStatusCode.OK,
-                Body = "Received Successfully.",
+                StatusCode = (int)sqsMessageResponse.HttpStatusCode,
+                Body = (sqsMessageResponse.HttpStatusCode==HttpStatusCode.OK)?ReceivedSuccessfully:AnErrorOccured,
                 Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
             };
 

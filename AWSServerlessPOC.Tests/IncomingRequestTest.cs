@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
@@ -22,7 +23,7 @@ namespace AWSServerlessPOC.Tests
         {
             var mockSqsClient = new Mock<IAmazonSQS>();
             var sendMessageResponse = _fixture.Create<SendMessageResponse>();
-
+            sendMessageResponse.HttpStatusCode = HttpStatusCode.OK;
             mockSqsClient.Setup(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(),It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(sendMessageResponse));
 
@@ -35,9 +36,33 @@ namespace AWSServerlessPOC.Tests
 
             var response = sut.Post(request, context.Object).Result;
 
-            Assert.Equal(200,response.StatusCode);
+            Assert.Equal((int)HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(sut.ReceivedSuccessfully,response.Body);
             context.Verify(x=>x.Logger.LogLine(It.IsAny<string>()),Times.Exactly(2));
             mockSqsClient.Verify(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>()),Times.Once);
+        }
+        [Fact]
+        public void PostIncomingRequest_Should_Fail()
+        {
+            var mockSqsClient = new Mock<IAmazonSQS>();
+            var sendMessageResponse = _fixture.Create<SendMessageResponse>();
+            sendMessageResponse.HttpStatusCode = HttpStatusCode.InternalServerError;
+            mockSqsClient.Setup(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(sendMessageResponse));
+
+            var request = _fixture.Create<APIGatewayProxyRequest>();
+            var context = new Mock<ILambdaContext>();
+
+            context.Setup(x => x.Logger.LogLine(It.IsAny<string>()));
+
+            var sut = new IncomingRequest(mockSqsClient.Object);
+
+            var response = sut.Post(request, context.Object).Result;
+
+            Assert.Equal((int)HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Equal(sut.AnErrorOccured, response.Body);
+            context.Verify(x => x.Logger.LogLine(It.IsAny<string>()), Times.Exactly(2));
+            mockSqsClient.Verify(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]

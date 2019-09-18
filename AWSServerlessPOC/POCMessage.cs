@@ -1,6 +1,4 @@
-﻿using Amazon.SimpleEmail.Model;
-
-namespace AWSServerlessPOC
+﻿namespace AWSServerlessPOC
 {
     public class POCMessage
     {

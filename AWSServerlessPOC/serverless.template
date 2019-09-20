@@ -50,7 +50,8 @@
 					"RootGet": {
 						"Type": "SQS",
 						"Properties": {
-							"Queue": {"Fn::GetAtt" : [ "MySqsQueue", "Arn"]}
+							"Queue": {"Fn::GetAtt" : [ "MySqsQueue", "Arn"]},
+							"BatchSize":10
 						}
 					}
 				}

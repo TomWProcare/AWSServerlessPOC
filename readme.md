@@ -1,3 +1,5 @@
+# Version 0.4:
+Changed unit tests to use auto moq. Format cleanup on the Serverless.Template.json.
 # Version 0.3:
 Added in BatchSize to the Serverless.Template.json to reduce empty queue requests.
 # Version 0.2:

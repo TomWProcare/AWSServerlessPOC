@@ -6,7 +6,6 @@
 	"Resources" : {
 			"MySqsQueue":{
 				"Type": "AWS::SQS::Queue"
-
 				},
 		"Post" : {
 			"Type" : "AWS::Serverless::Function",
@@ -37,7 +36,7 @@
 			}
 		},
 		"ListenForNewMessages":{
-					"Type" : "AWS::Serverless::Function",
+			"Type" : "AWS::Serverless::Function",
 			"Properties": {
 				"Handler": "AWSServerlessPOC::AWSServerlessPOC.IncomingRequest::ListenForNewMessages",
 				"Runtime": "dotnetcore2.1",
@@ -58,9 +57,6 @@
 				
 			}
 		}
-
-
-
 	},
 	
 	"Outputs" : {

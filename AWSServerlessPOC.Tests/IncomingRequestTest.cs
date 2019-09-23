@@ -8,6 +8,7 @@ using Amazon.Lambda.SQSEvents;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using AutoFixture;
+using AutoFixture.AutoMoq;
 using Moq;
 using Newtonsoft.Json;
 using Xunit;
@@ -18,19 +19,22 @@ namespace AWSServerlessPOC.Tests
     {
         private readonly Fixture _fixture = new Fixture();
 
+        public IncomingRequestTest()
+        {
+              _fixture.Customize(new AutoMoqCustomization());          
+        }
+
         [Fact]
         public void PostIncomingRequest_Should_Succeed()
         {
-            var mockSqsClient = new Mock<IAmazonSQS>();
+            var mockSqsClient = _fixture.Freeze<Mock<IAmazonSQS>>();
             var sendMessageResponse = _fixture.Create<SendMessageResponse>();
             sendMessageResponse.HttpStatusCode = HttpStatusCode.OK;
             mockSqsClient.Setup(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(),It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(sendMessageResponse));
 
             var request = _fixture.Create<APIGatewayProxyRequest>();
-            var context = new Mock<ILambdaContext>();
-
-            context.Setup(x => x.Logger.LogLine(It.IsAny<string>()));
+            var context = _fixture.Freeze<Mock<ILambdaContext>>();
 
             var sut = new IncomingRequest(mockSqsClient.Object);
 
@@ -41,19 +45,18 @@ namespace AWSServerlessPOC.Tests
             context.Verify(x=>x.Logger.LogLine(It.IsAny<string>()),Times.Exactly(2));
             mockSqsClient.Verify(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>()),Times.Once);
         }
+
         [Fact]
         public void PostIncomingRequest_Should_Fail()
         {
-            var mockSqsClient = new Mock<IAmazonSQS>();
+            var mockSqsClient = _fixture.Freeze<Mock<IAmazonSQS>>();
             var sendMessageResponse = _fixture.Create<SendMessageResponse>();
             sendMessageResponse.HttpStatusCode = HttpStatusCode.InternalServerError;
             mockSqsClient.Setup(x => x.SendMessageAsync(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(sendMessageResponse));
 
             var request = _fixture.Create<APIGatewayProxyRequest>();
-            var context = new Mock<ILambdaContext>();
-
-            context.Setup(x => x.Logger.LogLine(It.IsAny<string>()));
+            var context = _fixture.Freeze<Mock<ILambdaContext>>();
 
             var sut = new IncomingRequest(mockSqsClient.Object);
 
@@ -68,13 +71,11 @@ namespace AWSServerlessPOC.Tests
         [Fact]
         public void ListenForNewMessages_Should_Succeed()
         {
-            var mockSqsClient = new Mock<IAmazonSQS>();
+            var mockSqsClient = _fixture.Freeze<Mock<IAmazonSQS>>();
             var pocMessage = _fixture.Create<POCMessage>();
             var sqsMessage = new SQSEvent.SQSMessage {Body = JsonConvert.SerializeObject(pocMessage)};
             var sqsEvent = new SQSEvent {Records = new List<SQSEvent.SQSMessage>() {sqsMessage}};
-            var context = new Mock<ILambdaContext>();
-
-            context.Setup(x => x.Logger.LogLine(It.IsAny<string>()));
+            var context = _fixture.Freeze<Mock<ILambdaContext>>();
 
             var sut = new IncomingRequest(mockSqsClient.Object);
 
